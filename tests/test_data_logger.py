@@ -99,7 +99,26 @@ class DataLoggerTests(unittest.TestCase):
             with self.assertRaises(FileExistsError):
                 logger.log(record)
 
+    def test_incompatible_csv_header_is_rejected_before_writing_record(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            logger = DataLogger(Path(temporary_directory))
+            logger.csv_path.write_text(
+                "measurement_id,old_column\nold-id,value\n",
+                encoding="utf-8",
+            )
+            record = MeasurementRecord.create(
+                sample_id="blank-new-schema",
+                sample_type="water",
+                run_type="blank",
+            )
+
+            with self.assertRaisesRegex(ValueError, "different schema"):
+                logger.log(record)
+
+            self.assertFalse(
+                (logger.records_dir / (record.measurement_id + ".json")).exists()
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
-

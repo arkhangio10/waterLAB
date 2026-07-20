@@ -152,6 +152,7 @@ timestamp_utc
 sample_id
 sample_type
 run_type
+schema_version
 device_id
 camera_id
 excitation_nm
@@ -162,6 +163,9 @@ white_balance_mode
 image_path
 image_width_px
 image_height_px
+image_mean_brightness
+image_saturation_fraction
+image_sharpness_score
 roi_x
 roi_y
 roi_width

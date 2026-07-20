@@ -3,12 +3,14 @@ from pathlib import Path
 import tempfile
 import unittest
 
+import numpy as np
+
 from waterlab.camera import CameraConfig, capture_and_log, capture_usb_image
 
 
-class FakeFrame:
-    shape = (1080, 1920, 3)
-    size = 1080 * 1920 * 3
+def focused_test_frame():
+    checkerboard = (np.indices((1080, 1920)).sum(axis=0) % 2) * 120 + 60
+    return np.repeat(checkerboard[:, :, np.newaxis], 3, axis=2).astype(np.uint8)
 
 
 class FakeCapture:
@@ -28,7 +30,7 @@ class FakeCapture:
 
     def read(self):
         self.read_count += 1
-        return self.read_success, FakeFrame() if self.read_success else None
+        return self.read_success, focused_test_frame() if self.read_success else None
 
     def get(self, property_id):
         return {5: -6.0, 6: 2.0, 7: 1.0}.get(property_id, -1.0)
@@ -82,6 +84,8 @@ class CameraCaptureTests(unittest.TestCase):
             self.assertEqual(result.gain, 2.0)
             self.assertEqual(result.white_balance_mode, "auto")
             self.assertEqual(result.quality_flags, ())
+            self.assertAlmostEqual(result.quality_metrics.mean_brightness, 120.0)
+            self.assertEqual(result.quality_metrics.saturation_fraction, 0.0)
 
     def test_unavailable_camera_raises_and_releases_device(self):
         capture = FakeCapture(opened=False)
@@ -123,6 +127,8 @@ class CameraCaptureTests(unittest.TestCase):
             self.assertEqual(row["exposure"], "-6.0")
             self.assertEqual(row["image_width_px"], "1920")
             self.assertEqual(row["image_height_px"], "1080")
+            self.assertEqual(row["image_mean_brightness"], "120.0")
+            self.assertEqual(row["image_saturation_fraction"], "0.0")
 
 
 if __name__ == "__main__":

@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any, Optional, Sequence, Tuple
 
 from .data_logger import DataLogger
+from .quality import ImageQualityMetrics, analyze_bgr_frame
 from .schemas import MeasurementRecord
 
 
@@ -46,6 +47,7 @@ class CameraCapture:
     exposure: Optional[float]
     gain: Optional[float]
     white_balance_mode: str
+    quality_metrics: ImageQualityMetrics
     quality_flags: Tuple[str, ...]
 
 
@@ -120,7 +122,8 @@ def capture_usb_image(
             raise RuntimeError("USB camera returned an empty frame")
 
         actual_height, actual_width = int(frame.shape[0]), int(frame.shape[1])
-        quality_flags = []
+        quality_metrics = analyze_bgr_frame(frame)
+        quality_flags = list(quality_metrics.flags)
         if actual_width != config.width or actual_height != config.height:
             quality_flags.append("camera_resolution_mismatch")
 
@@ -141,6 +144,7 @@ def capture_usb_image(
             exposure=_camera_property(capture, cv2_module, "CAP_PROP_EXPOSURE"),
             gain=_camera_property(capture, cv2_module, "CAP_PROP_GAIN"),
             white_balance_mode=_white_balance_mode(capture, cv2_module),
+            quality_metrics=quality_metrics,
             quality_flags=tuple(quality_flags),
         )
     finally:
@@ -184,6 +188,9 @@ def capture_and_log(
         white_balance_mode=captured.white_balance_mode,
         image_width_px=captured.width,
         image_height_px=captured.height,
+        image_mean_brightness=captured.quality_metrics.mean_brightness,
+        image_saturation_fraction=captured.quality_metrics.saturation_fraction,
+        image_sharpness_score=captured.quality_metrics.sharpness_score,
         quality_flags=captured.quality_flags,
     )
 

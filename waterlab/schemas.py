@@ -15,6 +15,7 @@ from uuid import uuid4
 
 _SAFE_ID_RE = re.compile(r"[^A-Za-z0-9_.-]+")
 _VALID_RUN_TYPES = {"blank", "reference", "sample", "calibration", "replay"}
+DATA_SCHEMA_VERSION = "1.0.0"
 
 
 def utc_now_iso() -> str:
@@ -55,6 +56,7 @@ class MeasurementRecord:
     sample_id: str
     sample_type: str
     run_type: str
+    schema_version: str = DATA_SCHEMA_VERSION
     device_id: str = "jetson-nano-01"
     camera_id: str = "usb-camera-01"
     excitation_nm: Optional[int] = None
@@ -65,6 +67,9 @@ class MeasurementRecord:
     image_path: str = ""
     image_width_px: Optional[int] = None
     image_height_px: Optional[int] = None
+    image_mean_brightness: Optional[float] = None
+    image_saturation_fraction: Optional[float] = None
+    image_sharpness_score: Optional[float] = None
     roi_x: Optional[int] = None
     roi_y: Optional[int] = None
     roi_width: Optional[int] = None
@@ -129,6 +134,7 @@ class MeasurementRecord:
             "sample_id": self.sample_id,
             "sample_type": self.sample_type,
             "run_type": self.run_type,
+            "schema_version": self.schema_version,
             "device_id": self.device_id,
             "camera_id": self.camera_id,
         }
@@ -161,6 +167,19 @@ class MeasurementRecord:
         ):
             if value is not None and value <= 0:
                 raise ValueError("{} must be positive".format(name))
+
+        if (
+            self.image_saturation_fraction is not None
+            and not 0.0 <= self.image_saturation_fraction <= 1.0
+        ):
+            raise ValueError("image_saturation_fraction must be between 0 and 1")
+
+        for name, value in (
+            ("image_mean_brightness", self.image_mean_brightness),
+            ("image_sharpness_score", self.image_sharpness_score),
+        ):
+            if value is not None and value < 0:
+                raise ValueError("{} must be zero or greater".format(name))
 
         if self.local_confidence is not None and not 0.0 <= self.local_confidence <= 1.0:
             raise ValueError("local_confidence must be between 0 and 1")

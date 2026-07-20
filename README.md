@@ -28,7 +28,8 @@ The initial context is La Oroya and Cerro de Pasco, Peru. The prototype does **n
 | Laser attenuation hardware | Available; integration pending |
 | Arduino-controlled LEDs, servos, OLED, and sensor capture | Integration pending |
 | Synchronized image and sensor data logger | Validated on Jetson / Python 3.8 |
-| Direct USB camera capture into evidence bundle | Implemented; Jetson camera test pending |
+| Direct USB camera capture into evidence bundle | Validated at 1920 x 1080 on Jetson |
+| Deterministic image-quality gate | Implemented; Jetson validation pending |
 | Local screening dashboard and replay mode | Build Week deliverable |
 | GPT-5.6 evidence explanation | Build Week deliverable |
 | Lead reagent cartridge | Unavailable and not validated |
@@ -87,6 +88,17 @@ warm-up frames, stores the actual exposure/gain/white-balance metadata reported
 by the camera, and flags a resolution mismatch. Use `--device 1` if the USB
 camera is not `/dev/video0`. The Jetson already has a working OpenCV build; do
 not replace it with a generic `pip` wheel.
+
+Every direct capture also records mean brightness, saturated-pixel fraction,
+and a Laplacian sharpness score. The acquisition is flagged when it is too
+dark, too bright, saturated, blurry, or returned at an unexpected resolution.
+These quality indicators validate the acquisition and are never interpreted as
+water safety measurements.
+
+The current data contract is versioned as `1.0.0`. The logger refuses to append
+to a CSV created with a different header, preventing silent corruption when the
+measurement schema evolves. Use a new `--root` for a new schema or migrate the
+older dataset explicitly.
 
 ## Safety and scientific boundaries
 

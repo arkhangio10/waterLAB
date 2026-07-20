@@ -36,6 +36,7 @@ class DataLogger:
         """
 
         record.validate()
+        self._validate_csv_schema()
         json_path = self.records_dir / "{}.json".format(record.measurement_id)
         if json_path.exists():
             raise FileExistsError(
@@ -49,6 +50,18 @@ class DataLogger:
         self._write_json(stored_record, json_path)
         self._append_csv(stored_record)
         return stored_record
+
+    def _validate_csv_schema(self) -> None:
+        if not self.csv_path.exists() or self.csv_path.stat().st_size == 0:
+            return
+        with self.csv_path.open("r", encoding="utf-8", newline="") as handle:
+            existing_header = next(csv.reader(handle), None)
+        expected_header = list(MeasurementRecord.csv_fieldnames())
+        if existing_header != expected_header:
+            raise ValueError(
+                "measurements.csv uses a different schema. Start a new --root "
+                "directory or migrate the existing dataset before appending."
+            )
 
     def _copy_image(
         self, record: MeasurementRecord, source_image: Path
@@ -135,4 +148,3 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
