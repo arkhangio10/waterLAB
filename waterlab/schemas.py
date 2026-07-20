@@ -63,6 +63,8 @@ class MeasurementRecord:
     gain: Optional[float] = None
     white_balance_mode: str = ""
     image_path: str = ""
+    image_width_px: Optional[int] = None
+    image_height_px: Optional[int] = None
     roi_x: Optional[int] = None
     roi_y: Optional[int] = None
     roi_width: Optional[int] = None
@@ -153,6 +155,13 @@ class MeasurementRecord:
         if self.excitation_nm is not None and self.excitation_nm <= 0:
             raise ValueError("excitation_nm must be positive")
 
+        for name, value in (
+            ("image_width_px", self.image_width_px),
+            ("image_height_px", self.image_height_px),
+        ):
+            if value is not None and value <= 0:
+                raise ValueError("{} must be positive".format(name))
+
         if self.local_confidence is not None and not 0.0 <= self.local_confidence <= 1.0:
             raise ValueError("local_confidence must be between 0 and 1")
 
@@ -171,4 +180,3 @@ class MeasurementRecord:
             list(self.quality_flags), ensure_ascii=False, separators=(",", ":")
         )
         return payload
-

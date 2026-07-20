@@ -27,7 +27,8 @@ The initial context is La Oroya and Cerro de Pasco, Peru. The prototype does **n
 | 365 nm UV-A excitation | Available |
 | Laser attenuation hardware | Available; integration pending |
 | Arduino-controlled LEDs, servos, OLED, and sensor capture | Integration pending |
-| Synchronized image and sensor data logger | Working locally; Jetson validation pending |
+| Synchronized image and sensor data logger | Validated on Jetson / Python 3.8 |
+| Direct USB camera capture into evidence bundle | Implemented; Jetson camera test pending |
 | Local screening dashboard and replay mode | Build Week deliverable |
 | GPT-5.6 evidence explanation | Build Week deliverable |
 | Lead reagent cartridge | Unavailable and not validated |
@@ -66,6 +67,26 @@ python -m waterlab.data_logger `
 ```
 
 Add `--source-image PATH_TO_IMAGE` to copy an original capture into the same evidence bundle. Each call produces a row in `measurements.csv` and an immutable JSON sidecar under `records/`.
+
+Capture directly from the USB camera on the Jetson and register the image under
+the same measurement ID:
+
+```bash
+python3 -m waterlab.camera \
+  --root data/demo \
+  --sample-id uv-blank-01 \
+  --sample-type water \
+  --run-type blank \
+  --excitation-nm 365 \
+  --filter-id yellow-cellophane-v1 \
+  --notes "UV blank camera validation"
+```
+
+The command requests 1920 x 1080 MJPEG from camera device `0`, discards ten
+warm-up frames, stores the actual exposure/gain/white-balance metadata reported
+by the camera, and flags a resolution mismatch. Use `--device 1` if the USB
+camera is not `/dev/video0`. The Jetson already has a working OpenCV build; do
+not replace it with a generic `pip` wheel.
 
 ## Safety and scientific boundaries
 

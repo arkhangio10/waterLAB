@@ -160,6 +160,8 @@ exposure
 gain
 white_balance_mode
 image_path
+image_width_px
+image_height_px
 roi_x
 roi_y
 roi_width
