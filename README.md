@@ -27,7 +27,7 @@ The initial context is La Oroya and Cerro de Pasco, Peru. The prototype does **n
 | 365 nm UV-A excitation | Available |
 | Laser attenuation hardware | Available; integration pending |
 | Arduino-controlled LEDs, servos, OLED, and sensor capture | Integration pending |
-| Synchronized image and sensor data logger | Build Week deliverable |
+| Synchronized image and sensor data logger | Working locally; Jetson validation pending |
 | Local screening dashboard and replay mode | Build Week deliverable |
 | GPT-5.6 evidence explanation | Build Week deliverable |
 | Lead reagent cartridge | Unavailable and not validated |
@@ -42,6 +42,30 @@ The initial context is La Oroya and Cerro de Pasco, Peru. The prototype does **n
 6. The local model reports the observed optical-anomaly class with evidence per channel.
 7. GPT-5.6 converts the structured evidence into a bilingual explanation and recommended next step.
 8. The raw image, sensor values, configuration, and result are saved under one measurement ID.
+
+## Development quickstart
+
+The first implemented Build Week component is the synchronized measurement logger. It uses only the Python 3.8 standard library.
+
+Run its tests:
+
+```powershell
+python -m unittest discover -s tests -v
+```
+
+Create a local smoke-test record:
+
+```powershell
+python -m waterlab.data_logger `
+  --root tmp\logger-smoke `
+  --sample-id water-blank-01 `
+  --sample-type water `
+  --run-type blank `
+  --excitation-nm 365 `
+  --notes "Local smoke test"
+```
+
+Add `--source-image PATH_TO_IMAGE` to copy an original capture into the same evidence bundle. Each call produces a row in `measurements.csv` and an immutable JSON sidecar under `records/`.
 
 ## Safety and scientific boundaries
 
